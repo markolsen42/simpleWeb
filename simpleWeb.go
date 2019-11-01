@@ -18,7 +18,7 @@ func check(e error) {
 }
 
 func HelloServer(w http.ResponseWriter, r *http.Request) {
-	html, err := ioutil.ReadFile("test.html")
+	html, err := ioutil.ReadFile("content/main.html")
 	check(err)
 	fmt.Fprintf(w, string(html), r.URL.Path[1:])
 }
