@@ -26,7 +26,9 @@ func loadInserts(splits []string) string {
 		} else {
 			html, err := ioutil.ReadFile("content/" + splits[i] + ".html")
 			check(err)
-			out += string(html)
+			var pre = "<div style=\"border-style:solid\""
+			var post = "</div>"
+			out += pre+string(html)+ post
 		}
 	}
 	return out;
