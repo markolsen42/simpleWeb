@@ -26,9 +26,8 @@ func loadInserts(splits []string) string {
 		} else {
 			html, err := ioutil.ReadFile("content/" + splits[i] + ".html")
 			check(err)
-			var pre = "<div style='border-style: dotted'>"
-			var post = "</div>"
-
+			var pre = "<!-- from "+ splits[i] +"-->\n"+ "<div style='border-style: dotted'>"
+			var post = "</div>"+ "<!-- end " +splits[i] + "-->\n"
 			out += pre + string(html) + post
 		}
 	}
@@ -38,11 +37,20 @@ func loadInserts(splits []string) string {
 func HelloServer(w http.ResponseWriter, r *http.Request) {
 	html, err := ioutil.ReadFile("content/main.html")
 	check(err)
-	var splits = strings.Split(string(html),"***")
-	var inserted = loadInserts(splits) 
+	var insertSomeMore = true
+	var splits []string
+	var inserted =string(html)
+	for insertSomeMore {
+		splits = strings.Split(inserted,"***")
+		inserted = loadInserts(splits) 
+		if !strings.Contains(inserted, "***"){
+			insertSomeMore = false
+		}
+	}
 	fmt.Fprintf(w, inserted, r.URL.Path[1:])
 }
 //ttd
-//load splits recursively
-//show insert blocks visually***
+//load splits recursively***DONE***
+//add comments to show where the components come from***DONE***
+//show insert blocks visually***DONE***
 //make content editable
