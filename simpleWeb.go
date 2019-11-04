@@ -18,28 +18,49 @@ func check(e error) {
 	}
 }
 
-func loadInserts(splits []string) string {
-	var out = "";
-	for i:=0;i< len(splits);i++{
+func loadInserts(splits []string, addScaffolding bool) string {
+	var out = ""
+	for i := 0; i < len(splits); i++ {
 		if i%2 == 0 {
 			out += splits[i]
 		} else {
 			html, err := ioutil.ReadFile("content/" + splits[i] + ".html")
 			check(err)
-			var pre = "<div style=\"border-style:solid\""
-			var post = "</div>"
-			out += pre+string(html)+ post
+			if addScaffolding {
+				out += formatInsert(splits[i], string(html))
+			} else {
+				out += string(html)
+			}
 		}
 	}
-	return out;
+	return out
+}
+
+func formatInsert(insertToken string, insertHtml string) string {
+	var pre = "<!-- from " + insertToken + "-->\n" + "<div style='border-style: dotted'>"
+	var post = "</div>" + "<!-- end " + insertToken + "-->\n"
+	return pre + insertHtml + post
 }
 
 func HelloServer(w http.ResponseWriter, r *http.Request) {
 	html, err := ioutil.ReadFile("content/main.html")
 	check(err)
-	var splits = strings.Split(string(html),"***")
-	fmt.Println(splits)
-	var inserted = loadInserts(splits)
-	fmt.Println(inserted)
+	var addScaffolding = true
+	var insertSomeMore = true
+	var splits []string
+	var inserted = string(html)
+	for insertSomeMore {
+		splits = strings.Split(inserted, "***")
+		inserted = loadInserts(splits, addScaffolding)
+		if !strings.Contains(inserted, "***") {
+			insertSomeMore = false
+		}
+	}
 	fmt.Fprintf(w, inserted, r.URL.Path[1:])
 }
+
+//ttd
+//load splits recursively***DONE***
+//add comments to show where the components come from***DONE***
+//show insert blocks visually***DONE***
+//make content editable***
