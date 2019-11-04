@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 func main() {
@@ -17,8 +18,26 @@ func check(e error) {
 	}
 }
 
+func loadInserts(splits []string) string {
+	var out = "";
+	for i:=0;i< len(splits);i++{
+		if i%2 == 0 {
+			out += splits[i]
+		} else {
+			html, err := ioutil.ReadFile("content/" + splits[i] + ".html")
+			check(err)
+			out += string(html)
+		}
+	}
+	return out;
+}
+
 func HelloServer(w http.ResponseWriter, r *http.Request) {
 	html, err := ioutil.ReadFile("content/main.html")
 	check(err)
-	fmt.Fprintf(w, string(html), r.URL.Path[1:])
+	var splits = strings.Split(string(html),"***")
+	fmt.Println(splits)
+	var inserted = loadInserts(splits)
+	fmt.Println(inserted)
+	fmt.Fprintf(w, inserted, r.URL.Path[1:])
 }
