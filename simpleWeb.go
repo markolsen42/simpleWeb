@@ -30,6 +30,7 @@ func check(e error, path string) {
 	}
 }
 
+
 func loadInserts(splits []string, addScaffolding bool) string {
 	var out = ""
 	for i := 0; i < len(splits); i++ {
