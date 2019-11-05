@@ -4,17 +4,29 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 )
+
+var componentDelimiter = "***"
 
 func main() {
 	http.HandleFunc("/", HelloServer)
 	http.ListenAndServe(":8090", nil)
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
+func check(e error, path string) {
+	if e != nil && !strings.Contains(path, "favi") {
+		switch e {
+		case os.ErrInvalid:
+			fmt.Println("ErrInvalid " + path)
+		case os.ErrPermission:
+			fmt.Println("ErrPermission " + path)
+		case os.ErrNotExist:
+			fmt.Println("ErrNotExist " + path)
+		default:
+			panic(e)
+		}
 	}
 }
 
@@ -25,7 +37,7 @@ func loadInserts(splits []string, addScaffolding bool) string {
 			out += splits[i]
 		} else {
 			html, err := ioutil.ReadFile("content/" + splits[i] + ".html")
-			check(err)
+			check(err, splits[i])
 			if addScaffolding {
 				out += formatInsert(splits[i], string(html))
 			} else {
@@ -43,16 +55,20 @@ func formatInsert(insertToken string, insertHtml string) string {
 }
 
 func HelloServer(w http.ResponseWriter, r *http.Request) {
-	html, err := ioutil.ReadFile("content/main.html")
-	check(err)
+	var path = r.URL.Path
+	if path == "/" {
+		path = "/main.html"
+	}
+	html, err := ioutil.ReadFile("content" + path)
+	check(err, path)
 	var addScaffolding = true
 	var insertSomeMore = true
 	var splits []string
 	var inserted = string(html)
 	for insertSomeMore {
-		splits = strings.Split(inserted, "***")
+		splits = strings.Split(inserted, componentDelimiter)
 		inserted = loadInserts(splits, addScaffolding)
-		if !strings.Contains(inserted, "***") {
+		if !strings.Contains(inserted, componentDelimiter) {
 			insertSomeMore = false
 		}
 	}
