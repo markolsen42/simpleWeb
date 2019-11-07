@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 var componentDelimiter = "***"
 
 func main() {
-	http.HandleFunc("/", HelloServer)
+	http.HandleFunc("/", initialHandler)
 	http.ListenAndServe(":8090", nil)
 }
 
@@ -28,6 +29,43 @@ func check(e error, path string) {
 			panic(e)
 		}
 	}
+}
+
+func initialHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == "POST" {
+		handlePost(w, r)
+
+	} else {
+		helloServer(w, r)
+	}
+}
+
+func handlePost(w http.ResponseWriter, r *http.Request) {
+	// should be starts with not contains TODO
+	changeEndpoint := "/change"
+	if strings.Contains(r.URL.Path, changeEndpoint) {
+		// get the posted body as a map
+		result := getBodyMap(r)
+		// print the html element of the body
+		fmt.Print(result["html"])
+		// get the part of the URL after /change this will be the name of the file written
+		afterChange := r.URL.Path[len(changeEndpoint)+1:]
+		// turn the html element of the body a interface{} into a string then a byte array
+		d1 := []byte(fmt.Sprintf("%v", result["html"]))
+		//write the file
+		ioutil.WriteFile("content/"+afterChange, d1, 0644)
+
+		jsonResp := "{\"Hello\":\"World\"}"
+		fmt.Fprintf(w, jsonResp)
+	}
+}
+
+//get the bodyMap passed to the endpoint
+func getBodyMap(r *http.Request) map[string]interface{} {
+	var result map[string]interface{}
+	json.NewDecoder(r.Body).Decode(&result)
+	return result
 }
 
 func loadInserts(splits []string, addScaffolding bool) string {
@@ -54,7 +92,7 @@ func formatInsert(insertToken string, insertHtml string) string {
 	return pre + insertHtml + post
 }
 
-func HelloServer(w http.ResponseWriter, r *http.Request) {
+func helloServer(w http.ResponseWriter, r *http.Request) {
 	var path = r.URL.Path
 	if path == "/" {
 		path = "/main.html"
@@ -80,3 +118,8 @@ func HelloServer(w http.ResponseWriter, r *http.Request) {
 //add comments to show where the components come from***DONE***
 //show insert blocks visually***DONE***
 //make content editable***
+// test with multiple main input files ***DONE*** main and main2
+//make an endpoint that changes a file? POST /change/main.html***WORKING***
+// make a test post endpoint ***DONE*** initial handler to handlePost
+//set response type to json
+// make the postwork on a certain path /change
