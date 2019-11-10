@@ -36,47 +36,10 @@ func check(e error, path string) {
 func initialHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
-		handlePost(w, r)
+		HandlePost(w, r)
 
 	} else {
 		helloServer(w, r)
-	}
-}
-
-func handlePost(w http.ResponseWriter, r *http.Request) {
-	// should be starts with not contains TODO
-
-	changeEndpoint := "/change"
-	if strings.Contains(r.URL.Path, changeEndpoint) {
-
-		//this is possibly how to get data from application/x-www-form-urlencoded data - eg form post submit
-		r.ParseForm()
-		fmt.Println(r.Form)
-
-		// get the posted body as a map - this worked for a json post from postman
-		result := getBodyMap(r)
-		// print the html element of the body
-		fmt.Print(result)
-		fmt.Print(result["html"])
-		// get the part of the URL after /change this will be the name of the file written
-		afterChange := r.URL.Path[len(changeEndpoint)+1:]
-		// turn the html element of the body a interface{} into a string then a byte array
-		//d1 := []byte(fmt.Sprintf("%v", result["html"]))
-		d1 := []byte(r.Form["html"][0])
-		//write the file
-		ioutil.WriteFile("content/"+afterChange, d1, 0644)
-
-		jsonResp := `<!DOCTYPE html>
-		<html>
-		   <head>
-			  <title>HTML Meta Tag</title>
-			  <meta http-equiv = "refresh" content = "2; url = /main.html" />
-		   </head>
-		   <body>
-			  <p>Working</p>
-		   </body>
-		</html>`
-		fmt.Fprintf(w, jsonResp)
 	}
 }
 
@@ -90,13 +53,14 @@ func getBodyMap(r *http.Request) map[string]interface{} {
 func loadInserts(splits []string, addScaffolding bool) string {
 	var out = ""
 	for i := 0; i < len(splits); i++ {
+
 		if i%2 == 0 {
 			out += splits[i]
 		} else {
 			html, err := ioutil.ReadFile("content/" + splits[i] + ".html")
 			check(err, splits[i])
 			if addScaffolding {
-				out += formatInsert(splits[i], string(html))
+				out += formatInsert(splits[i], string(html), i)
 			} else {
 				out += string(html)
 			}
@@ -105,24 +69,29 @@ func loadInserts(splits []string, addScaffolding bool) string {
 	return out
 }
 
-func formatInsert(insertToken string, insertHtml string) string {
+func formatInsert(insertToken string, insertHtml string, nthInsert int) string {
 	var pre = "<!-- from " + insertToken + "-->\n" + "<div style='border-style: dotted'>"
 	var editor = `<form action="/change/` + insertToken + `.html" method="post">
 	Html: <input type="text" name="html"><br>
-  <input type="submit" value="Submit">
-</form>`
+  <input type="submit" value="Submit" class="gtmTest">
+  </form><button class="gtmTest` /* + strconv.Itoa(nthInsert)*/ + `">gtmClickTest</button>`
 	var post = "</div>" + "<!-- end " + insertToken + "-->\n"
 	return pre + editor + insertHtml + post
 }
 
 func helloServer(w http.ResponseWriter, r *http.Request) {
 	var path = r.URL.Path
+
 	if path == "/" {
 		path = "/main.html"
 	}
 	html, err := ioutil.ReadFile("content" + path)
 	check(err, path)
-	var addScaffolding = true
+	var addScaffolding = false
+	var q = r.URL.Query()
+	if len(q["edit"]) > 0 && q["edit"][0] == "true" {
+		addScaffolding = true
+	}
 	var insertSomeMore = true
 	var splits []string
 	var inserted = string(html)
