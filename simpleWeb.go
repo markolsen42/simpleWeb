@@ -18,7 +18,7 @@ func main() {
 	http.ListenAndServe(":8090", nil)
 }
 
-func check(e error, path string) {
+func check(e error, path string) string {
 	if e != nil && !strings.Contains(path, "favi") {
 		switch e {
 		case os.ErrInvalid:
@@ -27,10 +27,10 @@ func check(e error, path string) {
 			fmt.Println("ErrPermission " + path)
 		case os.ErrNotExist:
 			fmt.Println("ErrNotExist " + path)
-		default:
-			panic(e)
 		}
+		return "could not find file " + path
 	}
+	return ""
 }
 
 func initialHandler(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +58,7 @@ func loadInserts(splits []string, addScaffolding bool) string {
 			out += splits[i]
 		} else {
 			html, err := ioutil.ReadFile("content/" + splits[i] + ".html")
-			check(err, splits[i])
+			out += check(err, splits[i])
 			if addScaffolding {
 				out += formatInsert(splits[i], string(html), i)
 			} else {
@@ -72,7 +72,7 @@ func loadInserts(splits []string, addScaffolding bool) string {
 func formatInsert(insertToken string, insertHtml string, nthInsert int) string {
 	var pre = "<!-- from " + insertToken + "-->\n" + "<div style='border-style: dotted'>"
 	var editor = `<form action="/change/` + insertToken + `.html" method="post">
-	Html: <input type="text" name="html"><br>
+	Html:<textarea name="html">` + insertHtml + `</textarea><br>
   <input type="submit" value="Submit" class="gtmTest">
   </form><button class="gtmTest` /* + strconv.Itoa(nthInsert)*/ + `">gtmClickTest</button>`
 	var post = "</div>" + "<!-- end " + insertToken + "-->\n"
@@ -114,4 +114,6 @@ func helloServer(w http.ResponseWriter, r *http.Request) {
 //make an endpoint that changes a file? POST /change/main.html***WORKING***
 // make a test post endpoint ***DONE*** initial handler to handlePost
 //set response type to json
-// make the postwork on a certain path /change
+// make the postwork on a certain path /change ***DONE***
+//split go files into seperate ones ***DONE***
+//
