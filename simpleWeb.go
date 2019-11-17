@@ -72,7 +72,7 @@ func loadInserts(splits []string, addScaffolding bool) string {
 func formatInsert(insertToken string, insertHtml string, nthInsert int) string {
 	var pre = "<!-- from " + insertToken + "-->\n" + "<div style='border-style: dotted'>"
 	var editor = `<form action="/change/` + insertToken + `.html" method="post">
-	Html:<textarea name="html">` + insertHtml + `</textarea><br>
+	Html ` + insertToken + `:<textarea name="html">` + insertHtml + `</textarea><br>
   <input type="submit" value="Submit" class="gtmTest">
   </form><button class="gtmTest` /* + strconv.Itoa(nthInsert)*/ + `">gtmClickTest</button>`
 	var post = "</div>" + "<!-- end " + insertToken + "-->\n"
